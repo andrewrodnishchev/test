@@ -5,10 +5,10 @@ on:
     - cron: '*0 * * * *'
   push:
     branches:
-      - master  # Запускать при пуше в ветку main
+      - master
   pull_request:
     branches:
-      - master  # Запускать при создании pull request в ветку main
+      - master
 
 jobs:
   test:
@@ -33,6 +33,14 @@ jobs:
           sudo apt-get install -y chromium-browser
           echo "CHROME_BIN=/usr/bin/chromium-browser" >> $GITHUB_ENV
 
+      - name: Change DNS settings
+        run: |
+          echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf
+
+      - name: Check website availability
+        run: |
+          curl -I http://lk.pub.dev.ru/Account/Login || echo "Website is not reachable"
+
       - name: Run tests
         run: |
-          python -m pytest test.py  # Запустите ваш файл автотеста
+          python -m pytest test.py

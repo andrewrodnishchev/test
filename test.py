@@ -8,6 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from telegram import Bot
 import asyncio
 import tempfile
+import os
 
 class TestLogin:
     total_tests = 0
@@ -19,6 +20,8 @@ class TestLogin:
         options = webdriver.ChromeOptions()
         options.add_argument('--user-data-dir=' + tempfile.mkdtemp())  # Уникальная директория для пользовательских данных
         options.add_argument('--headless')  # Опционально, если не нужен GUI
+        options.add_argument('--no-sandbox')  # Для CI/CD окружений
+        options.add_argument('--disable-dev-shm-usage')  # Для CI/CD окружений
         cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         cls.driver.implicitly_wait(10)
 
@@ -54,24 +57,28 @@ class TestLogin:
 
     def test_login(self):
         driver = self.driver
-        driver.get('http://lk.pub.dev.ru/Account/Login')
+        try:
+            driver.get('http://lk.pub.dev.ru/Account/Login')
 
-        username_input = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, '//*[@id="Email"]'))
-        )
-        password_input = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '#PasswordUser '))
-        )
+            username_input = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, '//*[@id="Email"]'))
+            )
+            password_input = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, '#PasswordUser '))
+            )
 
-        username_input.send_keys('ast10@mailforspam.com')
-        password_input.send_keys('1')
+            username_input.send_keys('ast10@mailforspam.com')
+            password_input.send_keys('1')
 
-        login_button = WebDriverWait(driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/div/div/div/form/button'))
-        )
-        login_button.click()
+            login_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/div/div/div/form/button'))
+            )
+            login_button.click()
 
-        print("Вход выполнен успешно!")
+            print("Вход выполнен успешно!")
+        except Exception as e:
+            print(f"Ошибка при выполнении теста: {e}")
+            raise
 
 if __name__ == "__main__":
     pytest.main(["-q", "--disable-warnings"])
