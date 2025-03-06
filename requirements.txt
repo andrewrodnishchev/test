@@ -1,5 +1,5 @@
 pytest~=8.3.5
-selenium~=4.29.0
+selenium>=4.20.0,<5.0.0  # Замените на доступную версию
 webdriver-manager~=4.0.2
 python-telegram-bot~=21.11.1
 
