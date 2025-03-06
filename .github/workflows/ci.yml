@@ -2,7 +2,7 @@ name: CI
 
 on:
   schedule:
-    - cron: '*/1 * * * *'  # Запускать каждые 5 мин
+    - cron: '*/1 * * * *'  # Запускать каждые 1 мин
   push:
     branches:
       - main  # Запускать при пуше в ветку main
@@ -21,13 +21,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.8'  # Укажите нужную версию Python
+          python-version: '3.8'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt  # Убедитесь, что у вас есть requirements.txt
+          pip install -r requirements.txt
+
+      - name: Install Chrome
+        run: |
+          sudo apt-get install -y chromium-browser
+          echo "CHROME_BIN=/usr/bin/chromium-browser" >> $GITHUB_ENV
 
       - name: Run tests
         run: |
-          python test.py  # Запустите ваш файл автотеста
+          python -m pytest test.py  # Запустите ваш файл автотеста
