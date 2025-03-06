@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from telegram import Bot
 import asyncio
+import tempfile
 
 class TestLogin:
     total_tests = 0
@@ -15,7 +16,10 @@ class TestLogin:
 
     @classmethod
     def setup_class(cls):
-        cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        options = webdriver.ChromeOptions()
+        options.add_argument('--user-data-dir=' + tempfile.mkdtemp())  # Уникальная директория для пользовательских данных
+        options.add_argument('--headless')  # Опционально, если не нужен GUI
+        cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         cls.driver.implicitly_wait(10)
 
     @classmethod
