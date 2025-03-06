@@ -5,10 +5,10 @@ on:
     - cron: '*/5 * * * *'  # Запускать каждые 1 мин
   push:
     branches:
-      - main  # Запускать при пуше в ветку main
+      - master  # Запускать при пуше в ветку main
   pull_request:
     branches:
-      - main  # Запускать при создании pull request в ветку main
+      - master  # Запускать при создании pull request в ветку main
 
 jobs:
   test:
