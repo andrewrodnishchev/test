@@ -2,7 +2,7 @@ name: CI
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Запускать каждые 1 мин
+    - cron: '*0 * * * *'
   push:
     branches:
       - master  # Запускать при пуше в ветку main
