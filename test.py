@@ -1,91 +1,92 @@
+import logging
 import pytest
+import time  # Импортируем time для использования sleep
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-from telegram import Bot
-import asyncio
-import tempfile
+from colorama import Fore, init
+import requests
+
+# Инициализация colorama
+init(autoreset=True)
+logging.basicConfig(level=logging.DEBUG)
 
 class TestLogin:
     total_tests = 0
     success_tests = 0
     failed_tests = 0
+    telegram_bot_token = '7414360296:AAGisDw14CHmiaibMvkF1XsRvYreXKDXHNI'  # Замените на ваш токен
+    chat_id = '950609832'  # Замените на ваш chat_id
 
     @classmethod
     def setup_class(cls):
-        options = webdriver.ChromeOptions()
-        options.add_argument('--user-data-dir=' + tempfile.mkdtemp())
-        options.add_argument('--headless')  # Запуск в фоновом режиме
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--ignore-certificate-errors')
-        options.add_argument('--disable-gpu')
-        cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument("--ignore-certificate-errors")
+        cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.driver.implicitly_wait(10)
 
     @classmethod
     def teardown_class(cls):
         cls.driver.quit()
-        cls.print_final_results()
-        asyncio.run(cls.send_notification())
-
-    @classmethod
-    def print_final_results(cls):
-        print(f"\nИтоговые результаты:")
-        print(f"Успешные тесты: {cls.success_tests}")
-        print(f"Неуспешные тесты: {cls.failed_tests}")
-
-    @classmethod
-    async def send_notification(cls):
-        bot = Bot(token='YOUR_BOT_TOKEN')  # Замените на ваш токен
-        chat_id = 'YOUR_CHAT_ID'  # Замените на ваш chat_id
-        message = f"🎉 Итоги автотестов:\nУспешные тесты: {cls.success_tests}\nНеуспешные тесты: {cls.failed_tests}"
-        await bot.send_message(chat_id=chat_id, text=message)
 
     @pytest.fixture(autouse=True)
     def count_tests(self):
         TestLogin.total_tests += 1
+        test_successful = True
+
         try:
             yield
-        except Exception:
-            TestLogin.failed_tests += 1  # Увеличиваем счетчик неуспешных тестов
-            raise  # Пробрасываем исключение дальше
-        else:
-            TestLogin.success_tests += 1  # Увеличиваем счетчик успешных тестов, если исключение не возникло
+        except Exception as e:
+            TestLogin.failed_tests += 1
+            test_successful = False
+            print(Fore.RED + f"Ошибка: {str(e)}")
+            raise
+        finally:
+            if test_successful:
+                TestLogin.success_tests += 1
 
     def test_login(self):
-        driver = self.driver
-        driver.get('http://lk.corp.dev.ru')
+        self.driver.get('https://lk.corp.dev.ru/Account/Login')
+        time.sleep(3)  # Добавляем задержку на 3 секунды
+        self.perform_login('rodnischev@safib.ru', '1')  # Используем неправильный пароль
 
-        # Вводим неправильные учетные данные
-        username_input = WebDriverWait(driver, 20).until(
-            EC.visibility_of_element_located((By.XPATH, '//*[@id="Email"]'))
+        time.sleep(3)  # Добавляем задержку после выполнения логина
+
+        # Проверяем, что мы не перешли на страницу ClientOrg
+        if self.driver.current_url == 'https://lk.corp.dev.ru/ClientDevice':
+            print(Fore.GREEN + "Успешный тест: переход на страницу ClientDevice произошел.")
+        else:
+            print(Fore.RED + "Ошибка: не удалось перейти на страницу ClientDevice. Тест неуспешен.")
+            raise AssertionError("Тест не прошел: не удалось перейти на страницу ClientDevice.")
+
+    def perform_login(self, username, password):
+        username_input = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.XPATH, '//*[@id="Email"]'))
         )
-        password_input = WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '#PasswordUser  '))
+        password_input = WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#PasswordUser'))
         )
 
-        username_input.send_keys('ast10@mailforspam.com')  # Ваш email
-        password_input.send_keys('НеправильныйПароль')  # Неправильный пароль
+        username_input.send_keys(username)
+        password_input.send_keys(password)
 
-        login_button = WebDriverWait(driver, 10).until(
+        login_button = WebDriverWait(self.driver, 10).until(
             EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/div/div/div/form/button'))
         )
         login_button.click()
+        time.sleep(3)  # Добавляем задержку после нажатия кнопки логина
 
-        # Проверка на наличие сообщения об ошибке
+    def send_telegram_message(self, message):
+        url = f'https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage'
+        payload = {
+            'chat_id': self.chat_id,
+            'text': message
+        }
         try:
-            error_message = WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.XPATH, '//*[contains(text(), "Неудачная попытка аутентификации. Ошибка Active Directory: Не определен домен Active Directory")]'))
-            )
-            assert error_message is not None, "Ошибка входа не обнаружена, тест завершился неуспешно!"
-            print("Ошибка входа обнаружена, тест завершен успешно!")
-        except Exception as e:
-            print(f"Тест завершился неуспешно: {e}")
-            raise  # Пробрасываем исключение, чтобы счетчик неуспешных тестов увеличился
-
-if __name__ == "__main__":
-    pytest.main(["-q", "--disable-warnings"])
+            response = requests.post(url, json=payload)
+            response.raise_for_status()  # Проверка на ошибки HTTP
+        except requests.exceptions.RequestException as e:
+            print(Fore.RED + f"Ошибка отправки сообщения в Telegram: {e}")
