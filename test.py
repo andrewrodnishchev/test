@@ -1,4 +1,6 @@
 import logging
+import os
+
 import pytest
 import time  # Импортируем time для использования sleep
 from selenium import webdriver
@@ -25,7 +27,7 @@ class TestLogin:
     def setup_class(cls):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--ignore-certificate-errors")
-        chrome_options.add_argument("--user-data-dir=/tmp/chrome-user-data")  # Уникальная директория для профиля
+        chrome_options.add_argument("--user-data-dir=/tmp/chrome-user-data-{}".format(os.getpid()))
         cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.driver.implicitly_wait(10)
 
