@@ -39,7 +39,7 @@ jobs:
 
       - name: Check website availability
         run: |
-          curl -I http://lk.pub.dev.ru/Account/Login || echo "Website is not reachable"
+          curl -I https://lk.corp.dev.ru/Account/Login || echo "Website is not reachable"
 
       - name: Run tests
         run: |
