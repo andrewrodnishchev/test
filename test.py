@@ -2,7 +2,7 @@ import logging
 import os
 import tempfile
 import pytest
-import time  # Импортируем time для использования sleep
+import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -27,6 +27,10 @@ class TestLogin:
     def setup_class(cls):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--ignore-certificate-errors")
+        chrome_options.add_argument("--headless")  # Запуск в безголовом режиме
+        chrome_options.add_argument("--no-sandbox")  # Для CI/CD окружений
+        chrome_options.add_argument("--disable-dev-shm-usage")  # Для CI/CD окружений
+
         # Используем временный каталог для пользовательских данных
         temp_dir = tempfile.mkdtemp()
         chrome_options.add_argument(f"--user-data-dir={temp_dir}")
