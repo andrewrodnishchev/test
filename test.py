@@ -1,6 +1,6 @@
 import logging
 import os
-
+import tempfile
 import pytest
 import time  # Импортируем time для использования sleep
 from selenium import webdriver
@@ -27,7 +27,9 @@ class TestLogin:
     def setup_class(cls):
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--ignore-certificate-errors")
-        chrome_options.add_argument("--user-data-dir=/tmp/chrome-user-data-{}".format(os.getpid()))
+        # Используем временный каталог для пользовательских данных
+        temp_dir = tempfile.mkdtemp()
+        chrome_options.add_argument(f"--user-data-dir={temp_dir}")
         cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.driver.implicitly_wait(10)
 
@@ -52,14 +54,14 @@ class TestLogin:
                 TestLogin.success_tests += 1
 
     def test_login(self):
-        self.driver.get('https://lk.corp.dev.ru/Account/Login')
+        self.driver.get('http://lk.corp.dev.ru/Account/Login')
         time.sleep(3)  # Добавляем задержку на 3 секунды
         self.perform_login('rodnischev@safib.ru', '1')  # Используем неправильный пароль
 
         time.sleep(3)  # Добавляем задержку после выполнения логина
 
         # Проверяем, что мы не перешли на страницу ClientOrg
-        if self.driver.current_url == 'https://lk.corp.dev.ru/ClientDevice':
+        if self.driver.current_url == 'http://lk.corp.dev.ru/ClientDevice':
             print(Fore.GREEN + "Успешный тест: переход на страницу ClientDevice произошел.")
         else:
             print(Fore.RED + "Ошибка: не удалось перейти на страницу ClientDevice. Тест неуспешен.")
@@ -70,7 +72,7 @@ class TestLogin:
             EC.presence_of_element_located((By.XPATH, '//*[@id="Email"]'))
         )
         password_input = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '#PasswordUser'))
+            EC.presence_of_element_located((By.CSS_SELECTOR, '#PasswordUser '))
         )
 
         username_input.send_keys(username)
