@@ -15,7 +15,7 @@ def test_login():
     options.add_argument("--ignore-certificate-errors")  # Игнорировать ошибки SSL
 
     # Используем webdriver-manager для установки ChromeDriver
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager(version="134.0.6998.35").install()), options=options)
 
     try:
         driver.get("http://lk.corp.dev.ru/Account/Login")  # Замените на ваш URL
