@@ -13,4 +13,4 @@ test:
     - pip install webdriver-manager  # Устанавливаем webdriver-manager
     - pytest test.py  # Запускаем тесты
   variables:
-    DISPLAY: ":99"
+    DISPLAY: ":99"  # Убедитесь, что переменная DISPLAY установлена

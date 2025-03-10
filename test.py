@@ -8,6 +8,10 @@ from webdriver_manager.chrome import ChromeDriverManager  # Импортируе
 
 def test_login():
     options = Options()
+    options.add_argument("--headless")  # Запуск в безголовом режиме
+    options.add_argument("--no-sandbox")  # Отключение песочницы
+    options.add_argument("--disable-dev-shm-usage")  # Отключение использования /dev/shm
+    options.add_argument("--window-size=1920x1080")  # Установка размера окна
     options.add_argument("--ignore-certificate-errors")  # Игнорировать ошибки SSL
 
     # Используем webdriver-manager для установки ChromeDriver
