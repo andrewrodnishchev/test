@@ -13,6 +13,6 @@ test:
     - mv chromedriver /usr/local/bin/
     - chmod +x /usr/local/bin/chromedriver
     - apt-get install -y chromium
-    - pytest test_auth.py
+    - pytest test.py
   variables:
     DISPLAY: ":99"
