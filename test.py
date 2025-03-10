@@ -1,33 +1,42 @@
-import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 
 def test_login():
-    # Настройка драйвера (например, Chrome)
-    driver = webdriver.Chrome()
+    options = Options()
+    options.add_argument("--ignore-certificate-errors")  # Игнорировать ошибки SSL
+    driver = webdriver.Chrome(service=Service(), options=options)
 
     try:
-        # Открываем страницу авторизации
         driver.get("http://lk.corp.dev.ru/Account/Login")  # Замените на ваш URL
 
-        # Находим поля ввода логина и пароля и кнопку
-        username_input = driver.find_element(By.NAME, "Email или Логин")  # Замените на имя поля логина
-        password_input = driver.find_element(By.NAME, "Пароль")  # Замените на имя поля пароля
-        login_button = driver.find_element(By.NAME, "Вход")  # Замените на имя кнопки входа
+        # Явное ожидание появления поля ввода логина
+        username_input = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div/div/div/form/div[1]/input'))  # XPath для поля логина
+        )
+
+        # Явное ожидание появления поля ввода пароля
+        password_input = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div/div/div/form/div[2]/input'))  # XPath для поля пароля
+        )
+
+        # Явное ожидание появления кнопки входа
+        login_button = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.XPATH, '/html/body/div[1]/div/div/div/form/button'))  # XPath для кнопки
+        )
 
         # Вводим логин и пароль
         username_input.send_keys("rodnischev@safib.ru")  # Замените на ваш логин
         password_input.send_keys("1")  # Замените на ваш пароль
 
-        # Нажимаем на кнопку "Вход"
+        # Нажимаем кнопку входа
         login_button.click()
 
-        # Ждем, чтобы страница успела загрузиться
-        time.sleep(5)
-
-        # Проверка успешного входа (например, по наличию элемента на странице)
-        assert "Андрей Роднищев" in driver.page_source  # Замените на текст, который появляется после входа
-
     finally:
-        # Закрываем драйвер
         driver.quit()
+
+# Запуск теста
+test_login()
