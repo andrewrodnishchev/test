@@ -58,7 +58,7 @@ class TestLogin:
         # Настройка мокированного ответа
         mock_post.return_value = self.mock_response(200)
 
-        self.perform_login('rodnischev@safib.ru', '1')  # Используем неправильный пароль
+        self.perform_login('rodnischev@safib.ru', 'wrong_password')  # Используем неправильный пароль
 
         # Проверяем, что мы не перешли на страницу ClientOrg
         expected_url = 'http://lk.corp.dev.ru/ClientDevice'
@@ -87,3 +87,4 @@ class TestLogin:
             response.raise_for_status()  # Проверка на ошибки HTTP
         except requests.exceptions.RequestException as e:
             print(Fore.RED + f"Ошибка отправки сообщения в Telegram: {e}")
+
