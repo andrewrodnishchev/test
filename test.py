@@ -1,16 +1,12 @@
 import logging
-import time
-from unittest.mock import patch
-
 import pytest
 import requests
 from colorama import Fore, init
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
+from unittest.mock import patch
 
 # Инициализация colorama
 init(autoreset=True)
@@ -30,7 +26,12 @@ class TestLogin:
         chrome_options.add_argument("--headless")  # Запуск в безголовом режиме
         chrome_options.add_argument("--no-sandbox")  # Для CI/CD окружений
         chrome_options.add_argument("--disable-dev-shm-usage")  # Для CI/CD окружений
-        cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
+
+        # Используйте Remote WebDriver для CI/CD
+        cls.driver = webdriver.Remote(
+            command_executor='http://selenium:4444/wd/hub',  # Убедитесь, что это правильный адрес
+            options=chrome_options
+        )
         cls.driver.implicitly_wait(10)
 
     @classmethod
@@ -66,10 +67,13 @@ class TestLogin:
         assert actual_url != expected_url, Fore.RED + "Ошибка: не удалось перейти на страницу ClientDevice."
 
     def perform_login(self, username, password):
+        logging.debug("Вводим имя пользователя")
         self.wait_for_element(By.XPATH, '//*[@id="Email"]').send_keys(username)
+        logging.debug("Вводим пароль")
         self.wait_for_element(By.CSS_SELECTOR, '#PasswordUser ').send_keys(password)
+        logging.debug("Нажимаем кнопку входа")
         self.wait_for_element(By.XPATH, '/html/body/div[1]/div/div/div/form/button').click()
-        time.sleep(3)  # Задержка после нажатия кнопки логина
+        # Удалите time.sleep() и добавьте ожидание, если это необходимо
 
     def wait_for_element(self, by, value):
         return WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((by, value)))

@@ -8,7 +8,6 @@ test_job:
     - name: selenium/standalone-chrome  # Используем сервис Selenium с Chrome
       alias: selenium
   before_script:
-    - apt-get update && apt-get install -y curl unzip libnss3 libgconf-2-4 libxss1 libxi6 libgdk-pixbuf2.0-0 libgtk-3-0
     - python -m pip install --upgrade pip
     - pip install -r requirements.txt
   script:
