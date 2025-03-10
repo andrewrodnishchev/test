@@ -1,18 +1,18 @@
-image: python:3.9
+image: python:3.8
 
 stages:
   - test
 
-before_script:
-  - apt-get update
-  - apt-get install -y wget unzip
-  - wget https://chromedriver.storage.googleapis.com/2.41/chromedriver_linux64.zip
-  - unzip chromedriver_linux64.zip
-  - mv chromedriver /usr/local/bin/
-  - apt-get install -y chromium-browser
-
 test:
   stage: test
   script:
-    - pip install -r requirements.txt  # Убедитесь, что в requirements.txt указаны все необходимые библиотеки, включая selenium и pytest
-    - pytest -v  # Запуск тестов
+    - pip install -r requirements.txt
+    - apt-get update && apt-get install -y wget unzip
+    - wget https://chromedriver.storage.googleapis.com/2.42/chromedriver_linux64.zip
+    - unzip chromedriver_linux64.zip
+    - mv chromedriver /usr/local/bin/
+    - chmod +x /usr/local/bin/chromedriver
+    - apt-get install -y chromium
+    - pytest test_auth.py
+  variables:
+    DISPLAY: ":99"

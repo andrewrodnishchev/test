@@ -1,55 +1,33 @@
-import logging
-import pytest
+import time
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
-# Настройка логирования
-logging.basicConfig(level=logging.INFO)
+def test_login():
+    # Настройка драйвера (например, Chrome)
+    driver = webdriver.Chrome()
 
-class TestLogin:
-    @classmethod
-    def setup_class(cls):
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument("--headless")  # Запуск в безголовом режиме
-        chrome_options.add_argument("--no-sandbox")  # Для CI/CD
-        chrome_options.add_argument("--disable-dev-shm-usage")  # Для CI/CD
+    try:
+        # Открываем страницу авторизации
+        driver.get("http://lk.corp.dev.ru/Account/Login")  # Замените на ваш URL
 
-        # Используем локальный WebDriver
-        cls.driver = webdriver.Chrome(options=chrome_options)
-        cls.driver.implicitly_wait(10)
+        # Находим поля ввода логина и пароля и кнопку
+        username_input = driver.find_element(By.NAME, "Email или Логин")  # Замените на имя поля логина
+        password_input = driver.find_element(By.NAME, "Пароль")  # Замените на имя поля пароля
+        login_button = driver.find_element(By.NAME, "Вход")  # Замените на имя кнопки входа
 
-    @classmethod
-    def teardown_class(cls):
-        cls.driver.quit()
+        # Вводим логин и пароль
+        username_input.send_keys("rodnischev@safib.ru")  # Замените на ваш логин
+        password_input.send_keys("1")  # Замените на ваш пароль
 
-    @pytest.fixture(autouse=True)
-    def count_tests(self):
-        yield  # Запускаем тест
-        # Здесь можно добавить логику для подсчета успешных и неуспешных тестов, если нужно
-
-    def test_login(self):
-        self.perform_login('rodnischev@safib.ru', '1')
-
-        # Проверяем, что мы не перешли на страницу ClientOrg
-        expected_url = 'http://lk.corp.dev.ru/ClientDevice'
-        actual_url = self.driver.current_url
-        assert actual_url != expected_url, "Ошибка: не удалось перейти на страницу ClientDevice."
-
-    def perform_login(self, username, password):
-        logging.info("Вводим имя пользователя")
-        email_field = self.wait_for_element(By.XPATH, '//*[@id="Email"]')
-        email_field.send_keys(username)
-
-        logging.info("Вводим пароль")
-        password_field = self.wait_for_element(By.CSS_SELECTOR, '#PasswordUser ')
-        password_field.send_keys(password)
-
-        logging.info("Нажимаем кнопку входа")
-        login_button = self.wait_for_element(By.XPATH, '/html/body/div[1]/div/div/div/form/button')
+        # Нажимаем на кнопку "Вход"
         login_button.click()
 
-    def wait_for_element(self, by, value):
-        logging.info(f"Ожидание элемента: {by} с значением: {value}")
-        return WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((by, value)))
+        # Ждем, чтобы страница успела загрузиться
+        time.sleep(5)
+
+        # Проверка успешного входа (например, по наличию элемента на странице)
+        assert "Андрей Роднищев" in driver.page_source  # Замените на текст, который появляется после входа
+
+    finally:
+        # Закрываем драйвер
+        driver.quit()
