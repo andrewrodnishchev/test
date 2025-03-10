@@ -9,8 +9,8 @@ test:
     - apt-get update && apt-get install -y wget unzip
     - apt-get install -y chromium
     - pip install --upgrade pip  # Обновляем pip
+    - pip install --upgrade webdriver-manager  # Обновляем webdriver-manager
     - pip install -r requirements.txt  # Устанавливаем зависимости
-    - pip install webdriver-manager  # Устанавливаем webdriver-manager
     - pytest test.py  # Запускаем тесты
   variables:
     DISPLAY: ":99"  # Убедитесь, что переменная DISPLAY установлена
