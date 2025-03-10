@@ -6,13 +6,11 @@ stages:
 test:
   stage: test
   script:
-    - pip install -r requirements.txt
     - apt-get update && apt-get install -y wget unzip
-    - wget https://chromedriver.storage.googleapis.com/134.0.5735.90/chromedriver_linux64.zip
-    - unzip chromedriver_linux64.zip
-    - mv chromedriver /usr/local/bin/
-    - chmod +x /usr/local/bin/chromedriver
     - apt-get install -y chromium
-    - pytest test.py
+    - pip install --upgrade pip  # Обновляем pip
+    - pip install -r requirements.txt  # Устанавливаем зависимости
+    - pip install webdriver-manager  # Устанавливаем webdriver-manager
+    - pytest test.py  # Запускаем тесты
   variables:
     DISPLAY: ":99"

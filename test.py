@@ -4,11 +4,14 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager  # Импортируем webdriver-manager
 
 def test_login():
     options = Options()
     options.add_argument("--ignore-certificate-errors")  # Игнорировать ошибки SSL
-    driver = webdriver.Chrome(service=Service(), options=options)
+
+    # Используем webdriver-manager для установки ChromeDriver
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     try:
         driver.get("http://lk.corp.dev.ru/Account/Login")  # Замените на ваш URL
@@ -38,5 +41,5 @@ def test_login():
     finally:
         driver.quit()
 
-# Запуск теста
-test_login()
+# Не забудьте установить webdriver-manager, если он еще не установлен:
+# pip install webdriver-manager
