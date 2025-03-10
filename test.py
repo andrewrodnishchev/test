@@ -1,5 +1,4 @@
 import logging
-import tempfile
 import time
 from unittest.mock import patch
 
@@ -31,10 +30,6 @@ class TestLogin:
         chrome_options.add_argument("--headless")  # Запуск в безголовом режиме
         chrome_options.add_argument("--no-sandbox")  # Для CI/CD окружений
         chrome_options.add_argument("--disable-dev-shm-usage")  # Для CI/CD окружений
-
-        # Используем временный каталог для пользовательских данных
-        temp_dir = tempfile.mkdtemp()
-        chrome_options.add_argument(f"--user-data-dir={temp_dir}")
         cls.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=chrome_options)
         cls.driver.implicitly_wait(10)
 
@@ -61,45 +56,32 @@ class TestLogin:
     @patch('requests.post')  # Мокируем requests.post
     def test_login(self, mock_post):
         # Настройка мокированного ответа
-        mock_response = requests.Response()
-        mock_response.status_code = 200  # Успешный ответ
-        mock_post.return_value = mock_response
+        mock_post.return_value = self.mock_response(200)
 
-        # Здесь можно добавить логику, чтобы проверить, как ваш код реагирует на разные ответы
-
-        # Поскольку мы не можем получить доступ к реальному сайту, просто проверим успешный логин
         self.perform_login('rodnischev@safib.ru', '1')  # Используем неправильный пароль
 
         # Проверяем, что мы не перешли на страницу ClientOrg
-        if self.driver.current_url == 'http://lk.corp.dev.ru/ClientDevice':
-            print(Fore.GREEN + "Успешный тест: переход на страницу ClientDevice произошел.")
-        else:
-            print(Fore.RED + "Ошибка: не удалось перейти на страницу ClientDevice. Тест неуспешен.")
-            raise AssertionError("Тест не прошел: не удалось перейти на страницу ClientDevice.")
+        expected_url = 'http://lk.corp.dev.ru/ClientDevice'
+        actual_url = self.driver.current_url
+        assert actual_url != expected_url, Fore.RED + "Ошибка: не удалось перейти на страницу ClientDevice."
 
     def perform_login(self, username, password):
-        username_input = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.XPATH, '//*[@id="Email"]'))
-        )
-        password_input = WebDriverWait(self.driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, '#PasswordUser  '))
-        )
+        self.wait_for_element(By.XPATH, '//*[@id="Email"]').send_keys(username)
+        self.wait_for_element(By.CSS_SELECTOR, '#PasswordUser ').send_keys(password)
+        self.wait_for_element(By.XPATH, '/html/body/div[1]/div/div/div/form/button').click()
+        time.sleep(3)  # Задержка после нажатия кнопки логина
 
-        username_input.send_keys(username)
-        password_input.send_keys(password)
+    def wait_for_element(self, by, value):
+        return WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((by, value)))
 
-        login_button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH, '/html/body/div[1]/div/div/div/form/button'))
-        )
-        login_button.click()
-        time.sleep(3)  # Добавляем задержку после нажатия кнопки логина
+    def mock_response(self, status_code):
+        mock_response = requests.Response()
+        mock_response.status_code = status_code
+        return mock_response
 
     def send_telegram_message(self, message):
         url = f'https://api.telegram.org/bot{self.telegram_bot_token}/sendMessage'
-        payload = {
-            'chat_id': self.chat_id,
-            'text': message
-        }
+        payload = {'chat_id': self.chat_id, 'text': message}
         try:
             response = requests.post(url, json=payload)
             response.raise_for_status()  # Проверка на ошибки HTTP
