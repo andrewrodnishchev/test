@@ -1,16 +1,18 @@
+image: python:3.9
+
 stages:
   - test
 
-test_job:
+before_script:
+  - apt-get update
+  - apt-get install -y wget unzip
+  - wget https://chromedriver.storage.googleapis.com/2.41/chromedriver_linux64.zip
+  - unzip chromedriver_linux64.zip
+  - mv chromedriver /usr/local/bin/
+  - apt-get install -y chromium-browser
+
+test:
   stage: test
-  image: python:3.8-slim  # Используем более легковесный образ
-  services:
-    - name: selenium/standalone-chrome  # Используем сервис Selenium с Chrome
-      alias: selenium
-  before_script:
-    - python -m pip install --upgrade pip
-    - pip install -r requirements.txt
   script:
-    - python -m pytest test.py
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'  # Запускать только для ветки master
+    - pip install -r requirements.txt  # Убедитесь, что в requirements.txt указаны все необходимые библиотеки, включая selenium и pytest
+    - pytest -v  # Запуск тестов
